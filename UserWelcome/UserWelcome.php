@@ -59,64 +59,51 @@ function getWelcome() {
 	global $wgUser, $wgOut, $wgLang;
 
 	// Add CSS
-	$wgOut->addModuleStyles( 'ext.socialprofile.userwelcome.css' );
+	//$wgOut->addModuleStyles( 'ext.socialprofile.userwelcome.css' );
 
-	// Get stats and user level
-	$stats = new UserStats( $wgUser->getID(), $wgUser->getName() );
-	$stats_data = $stats->getUserStats();
-	$user_level = new UserLevel( $stats_data['points'] );
-
-	// Safe links
-	$level_link = Title::makeTitle( NS_HELP, wfMessage( 'mp-userlevels-link' )->inContentLanguage()->plain() );
-	$avatar_link = SpecialPage::getTitleFor( 'UploadAvatar' );
-
-	// Make an avatar
-	$avatar = new wAvatar( $wgUser->getID(), 'l' );
-
-	// Profile top images/points
-	$output = '<div class="mp-welcome-logged-in">
-	<h2>' . wfMessage( 'mp-welcome-logged-in', $wgUser->getName() )->parse() . '</h2>
-	<div class="mp-welcome-image">
-	<a href="' . htmlspecialchars( $wgUser->getUserPage()->getFullURL() ) . '" rel="nofollow">' .
-		$avatar->getAvatarURL() . '</a>';
-	if ( strpos( $avatar->getAvatarImage(), 'default_' ) !== false ) {
-		$uploadOrEditMsg = 'mp-welcome-upload';
-	} else {
-		$uploadOrEditMsg = 'mp-welcome-edit';
-	}
-	$output .= '<div><a href="' . htmlspecialchars( $avatar_link->getFullURL() ) . '" rel="nofollow">' .
-		wfMessage( $uploadOrEditMsg )->plain() .
-	'</a></div>';
-	$output .= '</div>';
-
-	global $wgUserLevels;
-	if ( $wgUserLevels ) {
-		$output .= '<div class="mp-welcome-points">
-			<div class="points-and-level">
-				<div class="total-points">' .
-					wfMessage(
-						'mp-welcome-points',
-						$wgLang->formatNum( $stats_data['points'] )
-					)->parse() . '</div>
-				<div class="honorific-level"><a href="' . htmlspecialchars( $level_link->getFullURL() ) .
-					'">(' . $user_level->getLevelName() . ')</a></div>
-			</div>
-			<div class="visualClear"></div>
-			<div class="needed-points">
-				<br />'
-				. wfMessage(
-					'mp-welcome-needed-points',
-					htmlspecialchars( $level_link->getFullURL() ),
-					$user_level->getNextLevelName(),
-					$wgLang->formatNum( $user_level->getPointsNeededToAdvance() )
-				)->text() .
-			'</div>
-		</div>';
-	}
-
-	$output .= '<div class="visualClear"></div>';
-	$output .= getRequests();
-	$output .= '</div>';
+    // First check if the user is logged in
+    if( $wgUser->isLoggedIn() ) {
+        // Begin panel markup
+        $output = '<div class="panel radius user-welcome">';
+        $output .= '<table width="100%" cellspacing="10"><tr><td class="avatar">';
+        // Get stats and user level
+        $stats = new UserStats( $wgUser->getID(), $wgUser->getName() );
+        $stats_data = $stats->getUserStats();
+        $user_level = new UserLevel( $stats_data['points'] );
+        // Safe links
+        $level_link = Title::makeTitle( NS_HELP, wfMessage( 'mp-userlevels-link' )->inContentLanguage()->plain() );
+        $avatar_link = SpecialPage::getTitleFor( 'UploadAvatar' );
+        // Make an avatar
+        $avatar = new wAvatar( $wgUser->getID(), 'l' );
+        // Profile top images/points
+        $output .= '<a href="' . htmlspecialchars( $wgUser->getUserPage()->getFullURL() ) . '" rel="nofollow">' .
+            $avatar->getAvatarURL() . '</a>';
+        if ( strpos( $avatar->getAvatarImage(), 'default_' ) !== false ) {
+            $uploadOrEditMsg = 'mp-welcome-upload';
+        } else {
+            $uploadOrEditMsg = 'mp-welcome-edit';
+        }
+        //$output .= '<div><a href="' . htmlspecialchars( $avatar_link->getFullURL() ) . '" rel="nofollow">' .
+        //	wfMessage( $uploadOrEditMsg )->plain() .
+        //'</a></div>';
+        $output .= '</td>';
+        //$output .= '<h2>' . wfMessage( 'mp-welcome-logged-in', $wgUser->getName() )->parse() . '</h2>';
+        $output .= '<td class="user-info">';
+        global $wgUserLevels;
+        if ( $wgUserLevels ) {
+            $output .= '<p class="user-score"><span class="total-points">' . wfMessage('mp-welcome-points', $wgLang->formatNum( $stats_data['points'] ))->parse() . '</span><a href="' . htmlspecialchars( $level_link->getFullURL() ) . '" class="user-level">(' . $user_level->getLevelName() . ')</a></p>';
+            $output .= '<p class="needed-points">' . wfMessage('mp-welcome-needed-points', htmlspecialchars( $level_link->getFullURL() ), $user_level->getNextLevelName(), $user_level->getPointsNeededToAdvance() )->text() . '</p>';
+        }
+        $output .= '</td>';
+        $output .= getRequests();
+        $output .= '</tr></table></div>';
+    } else {
+        // Presume user is not logged in
+        $output = '<ul class="mp-welcome-logged-out">';
+        $output .= '<li><a href="https://www.facebook.com/pages/PsychonautWiki/1647600655466130"><img src="/w/images/9/9b/Facebook2.png" /></a></li>';
+        $output .= '<li><a href="https://psychonautwiki.org/wiki/IRC"><img src="/w/images/d/d3/Join_our_chatroom.png" /></a></li>';
+        $output .= '</ul>';
+    }
 
 	return $output;
 }
@@ -127,14 +114,9 @@ function getRequests() {
 				getNewGiftLink() . getNewSystemGiftLink();
 
 	$output = '';
+
 	if ( $requests ) {
-		$output .= '<div class="mp-requests">
-			<h3>' . wfMessage( 'mp-requests-title' )->plain() . '</h3>
-			<div class="mp-requests-message">
-				' . wfMessage( 'mp-requests-message' )->plain() . "
-			</div>
-			$requests
-		</div>";
+		$output .= '<td><ul class="user-requests">' . $requests . '</ul></td>';
 	}
 
 	return $output;
@@ -150,19 +132,19 @@ function getRelationshipRequestLink() {
 	$output = '';
 
 	if ( $friend_request_count > 0 ) {
-		$output .= '<p>
+		$output .= '<li>
 			<img src="' . $wgExtensionAssetsPath . '/SocialProfile/images/addedFriendIcon.png" alt="" border="0" />
 			<span class="profile-on"><a href="' . htmlspecialchars( $relationship_request_link->getFullURL() ) . '" rel="nofollow">'
 			. wfMessage( 'mp-request-new-friend', $friend_request_count )->parse() . '</a></span>
-		</p>';
+		</li>';
 	}
 
 	if ( $foe_request_count > 0 ) {
-		$output .= '<p>
+		$output .= '<li>
 			<img src="' . $wgExtensionAssetsPath . '/SocialProfile/images/addedFoeIcon.png" alt="" border="0" />
 			<span class="profile-on"><a href="' . htmlspecialchars( $relationship_request_link->getFullURL() ) . '" rel="nofollow">'
 			. wfMessage( 'mp-request-new-foe', $foe_request_count )->parse() . '</a></span>
-		</p>';
+		</li>';
 	}
 
 	return $output;
@@ -176,12 +158,12 @@ function getNewGiftLink() {
 	$output = '';
 
 	if ( $gift_count > 0 ) {
-		$output .= '<p>
+		$output .= '<li>
 			<img src="' . $wgExtensionAssetsPath . '/SocialProfile/images/icon_package_get.gif" alt="" border="0" />
 			<span class="profile-on"><a href="' . htmlspecialchars( $gifts_title->getFullURL() ) . '" rel="nofollow">'
 				. wfMessage( 'mp-request-new-gift', $gift_count )->parse() .
 			'</a></span>
-		</p>';
+		</li>';
 	}
 
 	return $output;
@@ -195,12 +177,12 @@ function getNewSystemGiftLink() {
 	$output = '';
 
 	if ( $gift_count > 0 ) {
-		$output .= '<p>
+		$output .= '<li>
 			<img src="' . $wgExtensionAssetsPath . '/SocialProfile/images/awardIcon.png" alt="" border="0" />
 			<span class="profile-on"><a href="' . htmlspecialchars( $gifts_title->getFullURL() ) . '" rel="nofollow">'
 				. wfMessage( 'mp-request-new-award', $gift_count )->parse() .
 			'</a></span>
-		</p>';
+		</li>';
 	}
 
 	return $output;
@@ -214,12 +196,12 @@ function getNewMessagesLink() {
 
 	if ( $new_messages > 0 ) {
 		$board_link = SpecialPage::getTitleFor( 'UserBoard' );
-		$output .= '<p>
+		$output .= '<li>
 			<img src="' . $wgExtensionAssetsPath . '/SocialProfile/images/emailIcon.gif" alt="" border="" />
 			<span class="profile-on"><a href="' . htmlspecialchars( $board_link->getFullURL() ) . '" rel="nofollow">'
 				. wfMessage( 'mp-request-new-message' )->plain() .
 			'</a></span>
-		</p>';
+		</li>';
 	}
 
 	return $output;
