@@ -101,7 +101,7 @@ function getWelcome() {
         // Presume user is not logged in
         $output = '<ul class="mp-welcome-logged-out">';
         $output .= '<li><a href="https://www.facebook.com/pages/PsychonautWiki/1647600655466130"><img src="/w/images/9/9b/Facebook2.png" /></a></li>';
-        $output .= '<li><a href="https://psychonautwiki.org/wiki/IRC"><img src="/w/images/d/d3/Join_our_chatroom.png" /></a></li>';
+        $output .= '<li><a href="/wiki/IRC"><img src="/w/images/d/d3/Join_our_chatroom.png" /></a></li>';
         $output .= '</ul>';
     }
 
